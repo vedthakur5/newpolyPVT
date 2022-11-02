@@ -122,9 +122,12 @@ def train(train_loader, model, optimizer, epoch, test_path):
             print('##############################################################################best', best)
             logging.info('##############################################################################best:{}'.format(best))
        
+    
+    
 def save_checkpoint(state, filename = "my_checkpoint.pth.tar"):
+    path = f'/content/gdrive/My Drive/{filename}' 
     print("=>Saving Checkpoint")
-    torch.save(state, filename)
+    torch.save(state, path)
 
 def load_checkpoint(checkpoint):
     print("=>Loading Checkpoint")
@@ -220,8 +223,9 @@ if __name__ == '__main__':
 
     print("#" * 20, "Start Training", "#" * 20)
     if load_model:
-        if os.path.isfile('my_checkpoint.pth.tar') == True:
-            load_checkpoint(torch.load("my_checkpoint.pth.tar"))
+        pth = f'/content/gdrive/My Drive/my_checkpoint.pth.tar' 
+        if os.path.isfile(pth) == True:
+            load_checkpoint(torch.load(pth))       #"my_checkpoint.pth.tar"
 
     for epoch in range(1, opt.epoch):
         if epoch == 2:
