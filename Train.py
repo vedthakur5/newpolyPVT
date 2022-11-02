@@ -203,6 +203,7 @@ if __name__ == '__main__':
     # ---- build models ----
     # torch.cuda.set_device(0)  # set your gpu device
     model = PolypPVT().cuda()
+    load_model = True
 
     best = 0
 
