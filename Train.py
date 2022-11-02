@@ -229,7 +229,7 @@ if __name__ == '__main__':
             load_checkpoint(torch.load(pth))       #"my_checkpoint.pth.tar"
 
     for epoch in range(1, opt.epoch):
-        if (epoch % 5) == 0:
+        if (epoch % 2) == 0:
            checkpoint = {'state_dict' : model.state_dict(), 'optimizer': optimizer.state_dict()}
            save_checkpoint(checkpoint)
             
