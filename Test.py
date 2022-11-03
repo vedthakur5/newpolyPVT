@@ -22,7 +22,7 @@ if __name__ == '__main__':
         ##### put data_path here #####    #
         data_path = './dataset/TestDataset/{}'.format(_data_name)
         ##### save_path #####
-        save_path = f'/content/drive/MyDrive/BTP/result_map/PolypPVT/{}/'.format(_data_name)
+        save_path = f'/content/drive/MyDrive/BTP/result_map/PolypPVT/{}'.format(_data_name)
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
