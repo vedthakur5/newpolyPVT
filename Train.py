@@ -108,7 +108,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
    
     test1path = './dataset/TestDataset/'
     if (epoch + 1) % 1 == 0:
-        for dataset in ['NuCLS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:   #'CVC-300',
+        for dataset in ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:   #'CVC-300',
             dataset_dice = test(model, test1path, dataset)
             logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
             print(dataset, ': ', dataset_dice)
@@ -139,7 +139,7 @@ def plot_train(dict_plot=None, name = None):
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
-        transfuse = {'NuCLS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83}   #'CVC-300'
+        transfuse = {'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83}   #'CVC-300'
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
@@ -150,8 +150,8 @@ def plot_train(dict_plot=None, name = None):
     
     
 if __name__ == '__main__':
-    dict_plot = {'NuCLS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}  #'CVC-300'
-    name = ['NuCLS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']   #'CVC-300'
+    dict_plot = {'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}  #'CVC-300'
+    name = ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']   #'CVC-300'
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
