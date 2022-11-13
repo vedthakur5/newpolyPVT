@@ -235,6 +235,7 @@ if __name__ == '__main__':
             
         adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
         train(train_loader, model, optimizer, epoch, opt.test_path)
+        plot_train(dict_plot, name)
     
     # plot the eval.png in the training stage
-    # plot_train(dict_plot, name)
+    #plot_train(dict_plot, name)
