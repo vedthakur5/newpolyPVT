@@ -66,6 +66,8 @@ def train(train_loader, model, optimizer, epoch, test_path):
     global best
     size_rates = [0.75, 1, 1.25] 
     loss_P2_record = AvgMeter()
+    train_loss = 0.0                                                            ########## updated #############
+    valid_loss = 0.0 
     for i, pack in enumerate(train_loader, start=1):
         for rate in size_rates:
             optimizer.zero_grad()
@@ -91,6 +93,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
             # ---- recording loss ----
             if rate == 1:
                 loss_P2_record.update(loss_P2.data, opt.batchsize)
+            train_loss += loss.item()*data.size(0)                                       ############ updated #############
         # ---- train visualization ----
         if i % 20 == 0 or i == total_step:
             print('{} Epoch [{:03d}/{:03d}], Step [{:04d}/{:04d}], '
