@@ -117,6 +117,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
             print(dataset, ': ', dataset_dice)
             dict_plot[dataset].append(dataset_dice)
         meandice = test(model, test_path, 'test')
+        print('Average/mean dice score for the test data: ', meandice)                                  ############## updated ################
         dict_plot['test'].append(meandice)
         if meandice > best:
             best = meandice
