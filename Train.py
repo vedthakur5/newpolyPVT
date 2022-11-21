@@ -85,7 +85,8 @@ def train(train_loader, model, optimizer, epoch, test_path):
             # ---- loss function ----
             loss_P1 = structure_loss(P1, gts)
             loss_P2 = structure_loss(P2, gts)
-            loss = loss_P1 + loss_P2 
+            loss_p1p1 = sklearn.metrics.mean_squared_error(y_true, y_pred)
+            loss = loss_P1 + loss_P2 + loss_p1p1
             # ---- backward ----
             loss.backward()
             clip_gradient(optimizer, opt.clip)
