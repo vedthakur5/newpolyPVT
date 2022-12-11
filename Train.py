@@ -114,16 +114,19 @@ def train(train_loader, model, optimizer, epoch, test_path):
    
     test1path = './dataset/TestDataset/'
     if (epoch + 1) % 1 == 0:
-        for dataset in ['TestA', 'TestB']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
+        for dataset in ['ValA', 'ValB']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
             dataset_dice = test(model, test1path, dataset)
             logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
             print(dataset, ': ', dataset_dice)
-            dict_plot[dataset].append(dataset_dice)
-        meandice = test(model, test_path, 'test')
-        print('Average/mean dice score for the test(A+B) data: ', meandice)                                              ######## updated ########
-        dict_plot['test'].append(meandice)
-        if meandice > best:
-            best = meandice
+            dict_plot[dataset].append(dataset_dice)                                                                                    ## validation steps ##
+        meandiceA = test(model, test_path, 'TestA' )                                                                          ## test ##
+        print('Mean dice score - TestA data: ', meandiceA)                                                                        
+        meandiceB = test(model, test_path, 'TestB' )                                                                          ## test ##
+        print('Mean dice score - TestB data: ', meandiceB)
+        dict_plot['TestA'].append(meandiceA)
+        dict_plot['TestB'].append(meandiceB)
+        if meandiceA > best:
+            best = meandiceA
             torch.save(model.state_dict(), save_path + 'PolypPVT.pth')
             torch.save(model.state_dict(), save_path +str(epoch)+ 'PolypPVT-best.pth')
             print('##############################################################################best', best)
@@ -142,11 +145,13 @@ def load_checkpoint(checkpoint):
     optimizer.load_state_dict(checkpoint['optimizer'])
 
 def plot_train(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'lime', 'gold', 'm', 'plum', 'blue']
+    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
-        transfuse = {'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83}   #'CVC-300'
+        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
@@ -155,10 +160,29 @@ def plot_train(dict_plot=None, name = None):
     plt.savefig('eval.png')
     # plt.show()
     
+    #############  Train meandice score ###########
+    
+# def plot_train(dict_plot=None, name = None):
+#     color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+#     line = ['-', "--"]
+#     for i in range(len(name)):
+#         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+#         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+#         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+#         transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+#         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+#     plt.xlabel("epoch")
+#     plt.ylabel("dice")
+#     plt.title('Train')
+#     plt.legend()
+#     plt.savefig('eval.png')
+    
     
 if __name__ == '__main__':
-    dict_plot = {'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}  #'CVC-300'
-    name = ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']   #'CVC-300'
+    # 'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]
+    dict_plot = {'ValA':[], 'ValB':[], 'TestA':[], 'TestB':[]}  #'CVC-300'
+    #'GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test'
+    name = ['ValA', 'ValB', 'TestA', 'TestB']   #'CVC-300'
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
