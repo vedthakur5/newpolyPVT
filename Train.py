@@ -245,4 +245,4 @@ if __name__ == '__main__':
         plot_train(dict_plot, name)
     
     # plot the eval.png in the training stage
-    #plot_train(dict_plot, name)
+    plot_train(dict_plot, name)
