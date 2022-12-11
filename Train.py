@@ -114,13 +114,13 @@ def train(train_loader, model, optimizer, epoch, test_path):
    
     test1path = './dataset/TestDataset/'
     if (epoch + 1) % 1 == 0:
-        for dataset in ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:   #'CVC-300',
+        for dataset in ['TestA', 'TestB']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
             dataset_dice = test(model, test1path, dataset)
             logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
             print(dataset, ': ', dataset_dice)
             dict_plot[dataset].append(dataset_dice)
         meandice = test(model, test_path, 'test')
-        print('Average/mean dice score for the test data: ', meandice)                                  ############## updated ################
+        print('Average/mean dice score for the test(A+B) data: ', meandice)                                              ######## updated ########
         dict_plot['test'].append(meandice)
         if meandice > best:
             best = meandice
