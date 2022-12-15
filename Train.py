@@ -64,6 +64,10 @@ def test(model, path, dataset):
 def train(train_loader, model, optimizer, epoch, test_path):
     model.train()
     global best
+#     global train_loss_p1            
+#     global train_loss_p2
+#     global train_loss_p1p2
+#     global train_total_loss
     size_rates = [0.75, 1, 1.25] 
     loss_P2_record = AvgMeter()
     train_loss = 0.0                                                            ########## updated #############
@@ -155,7 +159,7 @@ def plot_train(dict_plot=None, name = None):
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
-    plt.title('Train')
+    plt.title('Validation - meandice score vs epochs')  #Train
     plt.legend()
     plt.savefig('eval.png')
     # plt.show()
