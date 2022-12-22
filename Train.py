@@ -64,10 +64,15 @@ def test(model, path, dataset):
 def train(train_loader, model, optimizer, epoch, test_path):
     model.train()
     global best
+    global train_loss
+
     size_rates = [0.75, 1, 1.25] 
     loss_P2_record = AvgMeter()
-    train_loss = 0.0                                                            ########## updated #############
-    valid_loss = 0.0 
+    loss_P1_record = AvgMeter()
+    loss_p1p2_record = AvgMeter()
+    loss_total_record = AvgMeter()
+#     train_loss = 0.0                                                            ########## updated #############
+#     valid_loss = 0.0 
     for i, pack in enumerate(train_loader, start=1):
         for rate in size_rates:
             optimizer.zero_grad()
@@ -83,9 +88,12 @@ def train(train_loader, model, optimizer, epoch, test_path):
             # ---- forward ----
             P1, P2= model(images)
             # ---- loss function ----
+            alpha = 1.5
+            beta = 2
             loss_P1 = structure_loss(P1, gts)
             loss_P2 = structure_loss(P2, gts)
-            loss = loss_P1 + loss_P2 
+            loss_p1p2 = sklearn.metrics.mean_squared_error(loss_P1, loss_P2)
+            loss = loss_P1 + alpha*loss_P2 + beta*loss_p1p2
             # ---- backward ----
             loss.backward()
             clip_gradient(optimizer, opt.clip)
@@ -93,6 +101,9 @@ def train(train_loader, model, optimizer, epoch, test_path):
             # ---- recording loss ----
             if rate == 1:
                 loss_P2_record.update(loss_P2.data, opt.batchsize)
+                loss_P1_record.update(loss_P1.data, opt.batchsize)
+                loss_p1p2_record.update(loss_p1p2.data, opt.batchsize)
+                loss_total_record.update(loss.data, opt.batchsize)
             train_loss += loss.item()*data.size(0)                                       ############ updated #############
         # ---- train visualization ----
         if i % 20 == 0 or i == total_step:
@@ -100,6 +111,11 @@ def train(train_loader, model, optimizer, epoch, test_path):
                   ' lateral-5: {:0.4f}]'.
                   format(datetime.now(), epoch, opt.epoch, i, total_step,
                          loss_P2_record.show()))
+            train_loss['train_loss_p1'].append(loss_P1_record)
+            train_loss['train_loss_p2'].append(loss_P2_record)
+            train_loss['train_loss_p1p2'].append(loss_p1p2_record)
+            train_loss['train_loss_total'].append(loss_total_record)
+            
     # save model 
     save_path = (opt.train_save)
     if not os.path.exists(save_path):
@@ -111,16 +127,19 @@ def train(train_loader, model, optimizer, epoch, test_path):
    
     test1path = './dataset/TestDataset/'
     if (epoch + 1) % 1 == 0:
-        for dataset in ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB']:   #'CVC-300',
+        for dataset in ['ValA', 'ValB']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
             dataset_dice = test(model, test1path, dataset)
             logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
             print(dataset, ': ', dataset_dice)
-            dict_plot[dataset].append(dataset_dice)
-        meandice = test(model, test_path, 'test')
-        print('Average/mean dice score for the test data: ', meandice)                                  ############## updated ################
-        dict_plot['test'].append(meandice)
-        if meandice > best:
-            best = meandice
+            dict_plot[dataset].append(dataset_dice)                                                                                    ## validation steps ##
+        meandiceA = test(model, test_path, 'TestA' )                                                                          ## test ##
+        print('Mean dice score - TestA data: ', meandiceA)                                                                        
+        meandiceB = test(model, test_path, 'TestB' )                                                                          ## test ##
+        print('Mean dice score - TestB data: ', meandiceB)
+        dict_plot['TestA'].append(meandiceA)
+        dict_plot['TestB'].append(meandiceB)
+        if meandiceA > best:
+            best = meandiceA
             torch.save(model.state_dict(), save_path + 'PolypPVT.pth')
             torch.save(model.state_dict(), save_path +str(epoch)+ 'PolypPVT-best.pth')
             print('##############################################################################best', best)
@@ -137,25 +156,94 @@ def load_checkpoint(checkpoint):
     print("=>Loading Checkpoint")
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
+    
+    
+####################################################################################################################################################
+####################################################################################################################################################
+####################################################################################################################################################
 
-def plot_train(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'lime', 'gold', 'm', 'plum', 'blue']
+
+#############  Train - meandice score ###########
+    
+def plot_train_dice(dict_plot=None, name = None):
+    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
-        transfuse = {'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83}   #'CVC-300'
+        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
-    plt.title('Train')
+    plt.title('Training - meandice score vs epochs')
     plt.legend()
-    plt.savefig('eval.png')
-    # plt.show()
+    plt.savefig('train_meandice-epoch.png')
+
+
+#############  Validation - meandice score ###########
     
+def plot_train(dict_plot=None, name = None):
+    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    line = ['-', "--"]
+    for i in range(len(name)):
+        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+    plt.xlabel("epoch")
+    plt.ylabel("dice")
+    plt.title('Validation - meandice score vs epochs')  #Train
+    plt.legend()
+    plt.savefig('val_meandice-epoch.png')
+    # plt.show()
+ 
+    #############  Train - loss curve ###########
+    
+def plot_train_loss(dict_plot=None, name = None):
+    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    line = ['-', "--"]
+    for i in range(len(name)):
+        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.title('Training - loss vs epochs')
+    plt.legend()
+    plt.savefig('train_loss-epoch.png')
+
+ 
+    #############    Validation - loss curve ###########
+    
+def plot_val_loss(dict_plot=None, name = None):
+    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    line = ['-', "--"]
+    for i in range(len(name)):
+        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.title('Validation - loss vs epochs')
+    plt.legend()
+    plt.savefig('val_loss-epoch.png')
+    
+
+####################################################################################################################################################
+####################################################################################################################################################
+####################################################################################################################################################
     
 if __name__ == '__main__':
-    dict_plot = {'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]}  #'CVC-300'
-    name = ['GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test']   #'CVC-300'
+    # 'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]
+    dict_plot = {'ValA':[], 'ValB':[], 'TestA':[], 'TestB':[]}  #'CVC-300'
+    #'GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test'
+    name = ['ValA', 'ValB', 'TestA', 'TestB']   #'CVC-300'
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
@@ -242,4 +330,4 @@ if __name__ == '__main__':
         plot_train(dict_plot, name)
     
     # plot the eval.png in the training stage
-    #plot_train(dict_plot, name)
+    plot_train(dict_plot, name)
